@@ -569,12 +569,56 @@ document.addEventListener("DOMContentLoaded", () => {
         `
         }
       </div>
+      <div class="share-buttons">
+        <span class="share-label">Share:</span>
+        <button class="share-btn share-twitter" data-activity="${name}" aria-label="Share on X (Twitter)">𝕏</button>
+        <button class="share-btn share-facebook" data-activity="${name}" aria-label="Share on Facebook">f</button>
+        <button class="share-btn share-copy" data-activity="${name}" aria-label="Copy link">🔗</button>
+      </div>
     `;
 
     // Add click handlers for delete buttons
     const deleteButtons = activityCard.querySelectorAll(".delete-participant");
     deleteButtons.forEach((button) => {
       button.addEventListener("click", handleUnregister);
+    });
+
+    // Add click handlers for share buttons
+    const maxDescLength = 100;
+    const truncatedDesc = details.description.length > maxDescLength
+      ? details.description.slice(0, maxDescLength) + "…"
+      : details.description;
+    const shareText = `Check out "${name}" at Mergington High School! ${truncatedDesc} Schedule: ${formattedSchedule}`;
+    const shareUrl = window.location.href.split("?")[0] + `?activity=${encodeURIComponent(name)}`;
+
+    activityCard.querySelector(".share-twitter").addEventListener("click", () => {
+      const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
+      window.open(twitterUrl, "_blank", "noopener,noreferrer");
+    });
+
+    activityCard.querySelector(".share-facebook").addEventListener("click", () => {
+      const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(shareText)}`;
+      window.open(facebookUrl, "_blank", "noopener,noreferrer");
+    });
+
+    activityCard.querySelector(".share-copy").addEventListener("click", (event) => {
+      const btn = event.currentTarget;
+      const originalText = btn.textContent;
+      const showCopied = () => {
+        btn.textContent = "✓";
+        btn.classList.add("share-copy-success");
+        setTimeout(() => {
+          btn.textContent = originalText;
+          btn.classList.remove("share-copy-success");
+        }, 2000);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(shareUrl).then(showCopied).catch(() => {
+          showMessage("Could not copy link. Please copy the URL from your browser.", "error");
+        });
+      } else {
+        showMessage("Could not copy link. Please copy the URL from your browser.", "error");
+      }
     });
 
     // Add click handler for register button (only when authenticated)
